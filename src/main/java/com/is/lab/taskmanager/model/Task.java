@@ -15,16 +15,20 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
+    @Column(nullable = false)
+    private String name;
+
     private String description;
 
-    @Enumerated(EnumType.STRING) // Stocheaza enum-ul ca String în DB
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TaskStatus status;
 
-    private Date deadline;
-
-    // Relatia Many-to-One: mai multe task-uri apartin unui singur proiect
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id") // Specifica coloana FK in tabelul 'tasks'
+    @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private User assignee;
 }
