@@ -1,5 +1,8 @@
 package com.is.lab.taskmanager.model;
 
+import lombok.Getter;
+
+@Getter
 public enum TaskStatus {
     TO_DO("To Do"),
     IN_PROGRESS("In Progress"),
@@ -11,7 +14,4 @@ public enum TaskStatus {
         this.displayName = displayName;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
 }
