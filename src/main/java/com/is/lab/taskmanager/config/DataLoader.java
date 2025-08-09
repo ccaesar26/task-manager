@@ -28,7 +28,6 @@ public class DataLoader implements CommandLineRunner {
     }
 
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
         // Clear existing data for a clean start
         taskRepository.deleteAll();
