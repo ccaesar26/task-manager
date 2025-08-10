@@ -1,6 +1,9 @@
 package com.is.lab.taskmanager.service;
 
+import com.is.lab.taskmanager.dto.TaskDto;
+import com.is.lab.taskmanager.dto.TaskFormDto;
 import com.is.lab.taskmanager.exception.ResourceNotFoundException;
+import com.is.lab.taskmanager.mapper.DtoMapper;
 import com.is.lab.taskmanager.model.Project;
 import com.is.lab.taskmanager.model.Task;
 import com.is.lab.taskmanager.model.TaskStatus;
@@ -19,47 +22,54 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final DtoMapper dtoMapper;
+
+    @Transactional(readOnly = true)
+    public TaskDto findTaskById(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        return dtoMapper.toTaskDto(task);
+    }
 
     @Transactional
-    public Task createTask(Long projectId, String name, String description) {
+    public TaskDto createTask(Long projectId, TaskFormDto formDto) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
 
         Task task = new Task();
-        task.setName(name);
-        task.setDescription(description);
+        task.setName(formDto.getName());
+        task.setDescription(formDto.getDescription());
         task.setProject(project);
         task.setStatus(TaskStatus.TO_DO); // Default status
 
-        return taskRepository.save(task);
-    }
-
-    @Transactional(readOnly = true)
-    public Task findTaskById(Long id) {
-        return taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        Task savedTask = taskRepository.save(task);
+        return dtoMapper.toTaskDto(savedTask);
     }
 
     @Transactional
-    public Task updateTaskStatus(Long taskId, TaskStatus status) {
-        Task task = findTaskById(taskId);
+    public TaskDto updateTaskStatus(Long taskId, TaskStatus status) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+
         task.setStatus(status);
-        return taskRepository.save(task);
+        Task updatedTask = taskRepository.save(task);
+        return dtoMapper.toTaskDto(updatedTask);
     }
 
     @Transactional
-    public Task assignTaskToUser(Long taskId, Long userId) {
-        Task task = findTaskById(taskId);
+    public TaskDto assignTaskToUser(Long taskId, Long userId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // Optional: Check if the user is a collaborator on the project
         if (!task.getProject().getCollaborators().contains(user) && !task.getProject().getOwner().equals(user)) {
             throw new IllegalArgumentException("User is not a collaborator or owner of the project.");
         }
 
         task.setAssignee(user);
-        return taskRepository.save(task);
+        Task updatedTask = taskRepository.save(task);
+        return dtoMapper.toTaskDto(updatedTask);
     }
 
     @Transactional

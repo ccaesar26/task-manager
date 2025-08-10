@@ -1,6 +1,10 @@
 package com.is.lab.taskmanager.service;
 
+import com.is.lab.taskmanager.dto.ProjectDetailDto;
+import com.is.lab.taskmanager.dto.ProjectFormDto;
+import com.is.lab.taskmanager.dto.ProjectListDto;
 import com.is.lab.taskmanager.exception.ResourceNotFoundException;
+import com.is.lab.taskmanager.mapper.DtoMapper;
 import com.is.lab.taskmanager.model.Project;
 import com.is.lab.taskmanager.model.User;
 import com.is.lab.taskmanager.repository.ProjectRepository;
@@ -10,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,37 +22,46 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final DtoMapper dtoMapper;
 
     @Transactional(readOnly = true)
-    public List<Project> findAllProjects() {
-        return projectRepository.findAll();
+    public List<ProjectListDto> findAllProjects() {
+        return projectRepository.findAll().stream()
+                .map(dtoMapper::toProjectListDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Project findProjectById(Long id) {
-        return projectRepository.findById(id)
+    public ProjectDetailDto findProjectById(Long id) {
+        Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
+        return dtoMapper.toProjectDetailDto(project);
     }
 
     @Transactional
-    public Project createProject(String name, String description, Long ownerId) {
+    public ProjectDetailDto createProject(ProjectFormDto formDto, Long ownerId) {
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + ownerId));
+                .orElseThrow(() -> new ResourceNotFoundException("User (owner) not found with id: " + ownerId));
 
         Project project = new Project();
-        project.setName(name);
-        project.setDescription(description);
+        project.setName(formDto.getName());
+        project.setDescription(formDto.getDescription());
         project.setOwner(owner);
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+        return dtoMapper.toProjectDetailDto(savedProject);
     }
 
     @Transactional
-    public Project updateProject(Long id, String name, String description) {
-        Project project = findProjectById(id);
-        project.setName(name);
-        project.setDescription(description);
-        return projectRepository.save(project);
+    public ProjectDetailDto updateProject(Long projectId, ProjectFormDto formDto) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
+
+        project.setName(formDto.getName());
+        project.setDescription(formDto.getDescription());
+
+        Project updatedProject = projectRepository.save(project);
+        return dtoMapper.toProjectDetailDto(updatedProject);
     }
 
     @Transactional
@@ -59,22 +73,26 @@ public class ProjectService {
     }
 
     @Transactional
-    public Project addCollaborator(Long projectId, Long userId) {
-        Project project = findProjectById(projectId);
+    public ProjectDetailDto addCollaborator(Long projectId, Long userId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User (collaborator) not found with id: " + userId));
 
         project.getCollaborators().add(user);
-        return projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
+        return dtoMapper.toProjectDetailDto(updatedProject);
     }
 
     @Transactional
-    public Project removeCollaborator(Long projectId, Long userId) {
-        Project project = findProjectById(projectId);
+    public ProjectDetailDto removeCollaborator(Long projectId, Long userId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         project.getCollaborators().remove(user);
-        return projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
+        return dtoMapper.toProjectDetailDto(updatedProject);
     }
 }
