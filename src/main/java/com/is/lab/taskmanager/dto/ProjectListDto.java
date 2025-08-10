@@ -1,15 +1,15 @@
 package com.is.lab.taskmanager.dto;
 
 import lombok.Data;
-import java.util.Set;
 
+/**
+ * A lightweight DTO for displaying projects in a list.
+ * It avoids fetching heavy collections like tasks and collaborators.
+ */
 @Data
-public class ProjectDto {
+public class ProjectListDto {
     private Long id;
     private String name;
     private String description;
     private String ownerUsername;
-    private Set<Long> taskIds;
-    private Set<String> collaboratorUsernames;
 }
-
