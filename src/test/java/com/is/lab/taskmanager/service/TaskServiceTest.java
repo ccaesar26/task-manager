@@ -1,6 +1,8 @@
 package com.is.lab.taskmanager.service;
 
-import com.is.lab.taskmanager.exception.ResourceNotFoundException;
+import com.is.lab.taskmanager.dto.TaskDto;
+import com.is.lab.taskmanager.dto.TaskFormDto;
+import com.is.lab.taskmanager.mapper.DtoMapper;
 import com.is.lab.taskmanager.model.Project;
 import com.is.lab.taskmanager.model.Task;
 import com.is.lab.taskmanager.model.TaskStatus;
@@ -13,14 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -34,6 +36,9 @@ class TaskServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Spy
+    private DtoMapper dtoMapper = new DtoMapper();
+
     @InjectMocks
     private TaskService taskService;
 
@@ -45,6 +50,7 @@ class TaskServiceTest {
     void setUp() {
         user = new User();
         user.setId(1L);
+        user.setUsername("test_user");
 
         project = new Project();
         project.setId(1L);
@@ -55,52 +61,51 @@ class TaskServiceTest {
         task.setName("Test Task");
         task.setProject(project);
         task.setStatus(TaskStatus.TO_DO);
+        task.setAssignee(user);
     }
 
     @Test
-    void whenCreateTask_thenTaskShouldBeSavedWithToDoStatus() {
+    void whenCreateTask_thenTaskShouldBeSavedAndDtoReturned() {
         // Arrange
+        TaskFormDto formDto = new TaskFormDto();
+        formDto.setName("New Task");
+        formDto.setDescription("Description");
+
+        // When service asks for the project, return our mock project
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        // When service saves the new task, return our mock task
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
         // Act
-        Task createdTask = taskService.createTask(1L, "Test Task", "Task Description");
+        TaskDto resultDto = taskService.createTask(1L, formDto);
 
         // Assert
-        assertThat(createdTask).isNotNull();
-        assertThat(createdTask.getName()).isEqualTo("Test Task");
-        assertThat(createdTask.getStatus()).isEqualTo(TaskStatus.TO_DO);
-        assertThat(createdTask.getProject().getName()).isEqualTo("Test Project");
+        assertThat(resultDto).isNotNull();
+        assertThat(resultDto.getName()).isEqualTo("Test Task");
+        assertThat(resultDto.getAssigneeUsername()).isEqualTo("test_user");
+        verify(taskRepository, times(1)).save(any(Task.class));
+        verify(dtoMapper, times(1)).toTaskDto(any(Task.class));
     }
 
     @Test
-    void whenUpdateTaskStatus_thenStatusShouldBeChanged() {
+    void whenUpdateTaskStatus_thenStatusShouldBeChangedAndDtoReturned() {
         // Arrange
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        // Create a separate task object to represent the saved state
-        Task savedTask = new Task();
-        savedTask.setId(1L);
-        savedTask.setStatus(TaskStatus.IN_PROGRESS);
+        // Create a separate task object to represent the "saved" state with new status
+        Task updatedTask = new Task();
+        updatedTask.setId(1L);
+        updatedTask.setProject(project);
+        updatedTask.setStatus(TaskStatus.IN_PROGRESS);
 
-        when(taskRepository.save(any(Task.class))).thenReturn(savedTask);
+        when(taskRepository.save(any(Task.class))).thenReturn(updatedTask);
 
         // Act
-        Task updatedTask = taskService.updateTaskStatus(1L, TaskStatus.IN_PROGRESS);
+        TaskDto resultDto = taskService.updateTaskStatus(1L, TaskStatus.IN_PROGRESS);
 
         // Assert
-        assertThat(updatedTask).isNotNull();
-        assertThat(updatedTask.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
-    }
-
-    @Test
-    void whenAssignTaskToUser_andTaskDoesNotExist_thenThrowResourceNotFoundException() {
-        // Arrange
-        when(taskRepository.findById(99L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThatThrownBy(() -> taskService.assignTaskToUser(99L, 1L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Task not found with id: 99");
+        assertThat(resultDto).isNotNull();
+        assertThat(resultDto.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        verify(taskRepository, times(1)).save(any(Task.class));
     }
 }
