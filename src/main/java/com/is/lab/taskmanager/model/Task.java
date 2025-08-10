@@ -2,11 +2,14 @@ package com.is.lab.taskmanager.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tasks")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Task {
     @Id

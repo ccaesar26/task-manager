@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: ~{body}}">
+<body>
+<div th:fragment="content">
+    <h1 th:text="'Add New Task to \'' + ${project.name} + '\''">Add New Task</h1>
+
+    <!-- Binds to 'taskForm' and POSTs to /projects/{projectId}/tasks -->
+    <form th:action="@{/projects/{projectId}/tasks(projectId=${project.id})}"
+          th:object="${taskForm}"
+          method="post">
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Task Name</label>
+            <input type="text" class="form-control" id="name" th:field="*{name}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" rows="3" th:field="*{description}"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Task</button>
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+</body>
+</html>

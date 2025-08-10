@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: ~{body}}">
+<body>
+<div th:fragment="content">
+    <div class="py-5 text-center">
+        <!-- Afișăm codul de eroare HTTP (ex: 404, 500) -->
+        <h1 class="display-1" th:text="${status}">Error Code</h1>
+
+        <!-- Afișăm fraza corespunzătoare codului de eroare (ex: Not Found) -->
+        <h2 th:text="${error}">Error Reason</h2>
+
+        <p class="lead mt-4">
+            Oops! Something went wrong. We are sorry for the inconvenience.
+        </p>
+
+        <!-- Afișează mesajul de eroare doar dacă este prezent.
+             Acesta este util în mediul de dezvoltare.
+             Într-un mediu de producție, s-ar putea să doriți să ascundeți acest detaliu. -->
+        <div th:if="${message}" class="alert alert-danger mt-3">
+            <strong>Details:</strong> <span th:text="${message}"></span>
+        </div>
+
+        <div class="mt-4">
+            <!-- Link pentru a reveni la pagina principală a aplicației -->
+            <a th:href="@{/}" class="btn btn-primary btn-lg">Go to Homepage</a>
+        </div>
+
+        <!-- Detalii suplimentare pentru debugging (pot fi comentate în producție) -->
+        <div class="text-muted mt-5 small">
+            <p>
+                Error occurred at: <span th:text="${#dates.format(timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span><br/>
+                On path: <span th:text="${path}"></span>
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
