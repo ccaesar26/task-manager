@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,16 +15,18 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/projects}">Task Manager</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <!-- ... (navbar-toggler) -->
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/projects}">Projects</a>
-                </li>
-            </ul>
+            <!-- Elemente afișate doar dacă utilizatorul este autentificat -->
+            <div sec:authorize="isAuthenticated()" class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">
+                    Welcome, <strong sec:authentication="name">Username</strong>
+                </span>
+                <!-- Butonul de Logout trebuie să fie un formular POST -->
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light">Logout</button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>

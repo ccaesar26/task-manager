@@ -52,7 +52,7 @@ public class DataLoader implements CommandLineRunner {
 
         User collaborator2 = new User();
         collaborator2.setUsername("collaborator_2");
-        collaborator1.setPassword(passwordEncoder.encode("pass123"));
+        collaborator2.setPassword(passwordEncoder.encode("pass123"));
         collaborator2.setEmail("collab2@example.com");
 
         userRepository.saveAll(Arrays.asList(owner1, collaborator1, collaborator2));
