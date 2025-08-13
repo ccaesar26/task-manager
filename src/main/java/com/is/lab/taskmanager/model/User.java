@@ -1,11 +1,14 @@
 package com.is.lab.taskmanager.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +17,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,4 +40,31 @@ public class User {
 
     @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> assignedTasks = new HashSet<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Pentru moment, nu avem un sistem de roluri/permisiuni.
+        // Vom returna o listă goală. Toți utilizatorii sunt la fel.
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Contul nu expiră niciodată
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Contul nu este niciodată blocat
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Credențialele nu expiră niciodată
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // Contul este mereu activ
+    }
 }
