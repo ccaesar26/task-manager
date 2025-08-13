@@ -8,6 +8,7 @@ import com.is.lab.taskmanager.repository.ProjectRepository;
 import com.is.lab.taskmanager.repository.TaskRepository;
 import com.is.lab.taskmanager.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +20,16 @@ public class DataLoader implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataLoader(UserRepository userRepository, ProjectRepository projectRepository) {
+    public DataLoader(
+            UserRepository userRepository,
+            ProjectRepository projectRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -35,17 +42,17 @@ public class DataLoader implements CommandLineRunner {
         // Create Users
         User owner1 = new User();
         owner1.setUsername("project_owner_1");
-        owner1.setPassword("pass123"); // In a real app, hash this!
+        owner1.setPassword(passwordEncoder.encode("pass123"));
         owner1.setEmail("owner1@example.com");
 
         User collaborator1 = new User();
         collaborator1.setUsername("collaborator_1");
-        collaborator1.setPassword("pass123");
+        collaborator1.setPassword(passwordEncoder.encode("pass123"));
         collaborator1.setEmail("collab1@example.com");
 
         User collaborator2 = new User();
         collaborator2.setUsername("collaborator_2");
-        collaborator2.setPassword("pass123");
+        collaborator1.setPassword(passwordEncoder.encode("pass123"));
         collaborator2.setEmail("collab2@example.com");
 
         userRepository.saveAll(Arrays.asList(owner1, collaborator1, collaborator2));
