@@ -3,10 +3,12 @@ package com.is.lab.taskmanager.controller.api;
 import com.is.lab.taskmanager.dto.ProjectDetailDto;
 import com.is.lab.taskmanager.dto.ProjectFormDto;
 import com.is.lab.taskmanager.dto.ProjectListDto;
+import com.is.lab.taskmanager.model.User;
 import com.is.lab.taskmanager.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,10 +33,11 @@ public class ProjectRestController {
     }
 
     @PostMapping
-    public ResponseEntity<ProjectDetailDto> createProject(@RequestBody ProjectFormDto formDto) {
+    public ResponseEntity<ProjectDetailDto> createProject(@RequestBody ProjectFormDto formDto,
+                                                          @AuthenticationPrincipal User currentUser) {
         // In a real API, ownerId would come from the authenticated user's security context
         Long ownerId = 1L; // Temporary hardcoded value
-        ProjectDetailDto createdProject = projectService.createProject(formDto, ownerId);
+        ProjectDetailDto createdProject = projectService.createProject(formDto, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
     }
 

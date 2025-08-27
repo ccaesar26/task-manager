@@ -1,8 +1,11 @@
 package com.is.lab.taskmanager.controller;
 
 import com.is.lab.taskmanager.dto.ProjectFormDto;
+import com.is.lab.taskmanager.model.User;
 import com.is.lab.taskmanager.service.ProjectService;
+import com.is.lab.taskmanager.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final UserService userService;
 
     // Display a list of all projects
     @GetMapping
@@ -36,12 +40,10 @@ public class ProjectController {
         return "projects/form";
     }
 
-    // Process the form for creating a new project
     @PostMapping
-    public String createProject(@ModelAttribute("projectForm") ProjectFormDto formDto) {
-        // TEMPORARY: Hardcoding the owner until security is implemented
-        Long ownerId = 1L;
-        projectService.createProject(formDto, ownerId);
+    public String createProject(@ModelAttribute("projectForm") ProjectFormDto formDto,
+                                @AuthenticationPrincipal User currentUser) {
+        projectService.createProject(formDto, currentUser);
         return "redirect:/projects";
     }
 
@@ -73,5 +75,28 @@ public class ProjectController {
     public String deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return "redirect:/projects";
+    }
+
+    @GetMapping("/{projectId}/collaborators/add")
+    public String showAddCollaboratorForm(@PathVariable Long projectId, Model model) {
+        model.addAttribute("project", projectService.findProjectById(projectId));
+        model.addAttribute("users", userService.findAllUsers()); // Trimitem lista de useri
+        return "projects/add-collaborator-form";
+    }
+
+    @PostMapping("/{projectId}/collaborators/add")
+    public String addCollaborator(@PathVariable Long projectId,
+                                  @RequestParam Long userId,
+                                  @AuthenticationPrincipal User currentUser) {
+        projectService.addCollaborator(projectId, userId, currentUser);
+        return "redirect:/projects/" + projectId;
+    }
+
+    @PostMapping("/{projectId}/collaborators/{collaboratorId}/remove")
+    public String removeCollaborator(@PathVariable Long projectId,
+                                     @PathVariable Long collaboratorId,
+                                     @AuthenticationPrincipal User currentUser) {
+        projectService.removeCollaborator(projectId, collaboratorId, currentUser);
+        return "redirect:/projects/" + projectId;
     }
 }

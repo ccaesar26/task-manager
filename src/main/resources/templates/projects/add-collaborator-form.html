@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: ~{body}}">
+<body>
+<div th:fragment="content">
+  <h1 th:text="'Add Collaborator to \'' + ${project.name} + '\''">Add Collaborator</h1>
+
+  <form th:action="@{/projects/{projectId}/collaborators/add(projectId=${project.id})}" method="post">
+    <div class="mb-3">
+      <label for="user" class="form-label">Select User</label>
+      <select id="user" name="userId" class="form-select" required>
+        <option value="" disabled selected>Choose a user...</option>
+        <!-- Iterăm peste toți userii și îi afișăm ca opțiuni -->
+        <!-- Excludem proprietarul și colaboratorii existenți din listă -->
+        <th:block th:each="user : ${users}"
+                  th:if="${user.id != project.owner.id and !project.collaborators.contains(user)}">
+          <option th:value="${user.id}" th:text="${user.username}">Username</option>
+        </th:block>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Collaborator</button>
+    <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+</body>
+</html>

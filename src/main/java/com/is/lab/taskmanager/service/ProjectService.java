@@ -10,6 +10,7 @@ import com.is.lab.taskmanager.model.User;
 import com.is.lab.taskmanager.repository.ProjectRepository;
 import com.is.lab.taskmanager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,10 +40,7 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectDetailDto createProject(ProjectFormDto formDto, Long ownerId) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("User (owner) not found with id: " + ownerId));
-
+    public ProjectDetailDto createProject(ProjectFormDto formDto, User owner) {
         Project project = new Project();
         project.setName(formDto.getName());
         project.setDescription(formDto.getDescription());
@@ -73,25 +71,37 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectDetailDto addCollaborator(Long projectId, Long userId) {
+    public ProjectDetailDto addCollaborator(Long projectId, Long collaboratorId, User currentUser) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User (collaborator) not found with id: " + userId));
 
-        project.getCollaborators().add(user);
+        // Authorization Check: Only the project owner can add collaborators.
+        if (!project.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Only the project owner can add collaborators.");
+        }
+
+        User collaborator = userRepository.findById(collaboratorId)
+                .orElseThrow(() -> new ResourceNotFoundException("User (collaborator) not found with id: " + collaboratorId));
+
+        project.getCollaborators().add(collaborator);
         Project updatedProject = projectRepository.save(project);
         return dtoMapper.toProjectDetailDto(updatedProject);
     }
 
     @Transactional
-    public ProjectDetailDto removeCollaborator(Long projectId, Long userId) {
+    public ProjectDetailDto removeCollaborator(Long projectId, Long collaboratorId, User currentUser) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        project.getCollaborators().remove(user);
+        // Authorization Check: Only the project owner can remove collaborators.
+        if (!project.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Only the project owner can remove collaborators.");
+        }
+
+        User collaborator = userRepository.findById(collaboratorId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + collaboratorId));
+
+        project.getCollaborators().remove(collaborator);
         Project updatedProject = projectRepository.save(project);
         return dtoMapper.toProjectDetailDto(updatedProject);
     }

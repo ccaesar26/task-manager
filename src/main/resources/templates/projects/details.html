@@ -69,6 +69,36 @@
     </div>
   </div>
 
+  <hr/>
+
+  <!-- Collaborators Section -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Collaborators</h2>
+    <!-- Butonul de adăugare apare doar dacă userul curent este proprietarul proiectului -->
+    <a th:if="${#authentication.name == project.owner.username}"
+       th:href="@{/projects/{projectId}/collaborators/add(projectId=${project.id})}"
+       class="btn btn-info">
+      Add Collaborator
+    </a>
+  </div>
+
+  <div th:if="${project.collaborators.isEmpty()}">
+    <p>This project has no collaborators.</p>
+  </div>
+
+  <ul th:if="${!project.collaborators.isEmpty()}" class="list-group">
+    <li th:each="collaborator : ${project.collaborators}" class="list-group-item d-flex justify-content-between align-items-center">
+      <span th:text="${collaborator.username}">Collaborator Username</span>
+      <!-- Butonul de eliminare apare doar pentru proprietar -->
+      <form th:if="${#authentication.name == project.owner.username}"
+            th:action="@{/projects/{projectId}/collaborators/{collaboratorId}/remove(projectId=${project.id}, collaboratorId=${collaborator.id})}"
+            method="post"
+            onsubmit="return confirm('Are you sure you want to remove this collaborator?');">
+        <button type="submit" class="btn btn-sm btn-warning">Remove</button>
+      </form>
+    </li>
+  </ul>
+
   <!-- Confirmation Modal for Deleting Project -->
   <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
     <div class="modal-dialog">

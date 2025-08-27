@@ -96,12 +96,12 @@ class ProjectServiceTest {
         formDto.setDescription("New Description");
 
         // We need to mock what the repositories do
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+//        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         // When save is called, return the mock project so the mapper has something to convert
         when(projectRepository.save(any(Project.class))).thenReturn(project);
 
         // Act
-        ProjectDetailDto resultDto = projectService.createProject(formDto, 1L);
+        ProjectDetailDto resultDto = projectService.createProject(formDto, user);
 
         // Assert
         assertThat(resultDto).isNotNull();
